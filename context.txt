@@ -14,6 +14,10 @@ export function activate(context: vscode.ExtensionContext) {
     .getConfiguration("double-action")
     .get("singlePressCommand") as string;
 
+  let preDoublePressCommand = vscode.workspace
+    .getConfiguration("double-action")
+    .get("preDoublePressCommand") as string;
+
   let doublePressCommand: string = vscode.workspace
     .getConfiguration("double-action")
     .get("doublePressCommand") as string;
@@ -22,9 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
     .getConfiguration("double-action")
     .get("doublePressThreshold") as number;
 
-  let showThresholdHelper: boolean = vscode.workspace
-    .getConfiguration("double-action")
-    .get("showThresholdHelper") as boolean;
 
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand
@@ -34,35 +35,28 @@ export function activate(context: vscode.ExtensionContext) {
       console.log("Configuration changed");
       if (
         event.affectsConfiguration("double-action.singlePressCommand") ||
+        event.affectsConfiguration("double-action.preDoublePressCommand") ||
         event.affectsConfiguration("double-action.doublePressCommand") ||
-        event.affectsConfiguration("double-action.doublePressThreshold") ||
-        event.affectsConfiguration("double-action.showThresholdHelper")
+        event.affectsConfiguration("double-action.doublePressThreshold")
       ) {
         singlePressCommand = vscode.workspace
           .getConfiguration("double-action")
           .get("singlePressCommand") as string;
+        preDoublePressCommand = vscode.workspace
+          .getConfiguration("double-action")
+          .get("preDoublePressCommand") as string;
         doublePressCommand = vscode.workspace
           .getConfiguration("double-action")
           .get("doublePressCommand") as string;
         doublePressThreshold = vscode.workspace
           .getConfiguration("double-action")
           .get("doublePressThreshold") as number;
-        showThresholdHelper = vscode.workspace
-          .getConfiguration("double-action")
-          .get("showThresholdHelper") as boolean;
       }
     })
   );
 
   let timeoutId: NodeJS.Timeout | null = null;
   let first = true;
-  let currentTime = new Date().getTime();
-
-  const allKeysDisposable = vscode.commands.registerCommand("*", (args) => {
-    // This will be called for every key press
-    console.log("Key pressed:", args);
-    // You can add your logic here to handle different key presses
-  });
 
   const disposable = vscode.commands.registerCommand(
     "double-action.jump-helper",
@@ -70,8 +64,13 @@ export function activate(context: vscode.ExtensionContext) {
       if (!first) {
         vscode.window.showInformationMessage("Double Press");
         first = true;
+
+        // This is used personally to exit the previous command
+        if (preDoublePressCommand !== "") {
+          vscode.commands.executeCommand(preDoublePressCommand);
+        }
         vscode.commands.executeCommand(doublePressCommand);
-        vscode.commands.executeCommand(doublePressCommand);
+
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
@@ -82,39 +81,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.executeCommand(singlePressCommand);
         timeoutId = setTimeout(() => {
           first = true;
-        }, 800);
+        }, doublePressThreshold);
       }
-      // if (!showThresholdHelper) {
-      //   if (timeoutId) {
-      //     // Double press detected
-      //     clearTimeout(timeoutId);
-      //     timeoutId = null;
-      //     console.log("[Double-Action] Double press detected!");
-      //     // Execute your double press command here
-      //     vscode.commands.executeCommand(doublePressCommand);
-      //   } else {
-      //     timeoutId = setTimeout(() => {
-      //       // Single press
-      //       timeoutId = null;
-      //       console.log("[Double-Action] Single press");
-      //       // Execute your single press command here
-      //       vscode.commands.executeCommand(singlePressCommand);
-      //     }, doublePressThreshold);
-      //   }
-      // } else {
-      //   if (first) {
-      //     vscode.window.showInformationMessage("Single Press");
-      //     currentTime = new Date().getTime();
-      //     first = false;
-      //   } else {
-      //     const newTime = new Date().getTime();
-      //     vscode.window.showInformationMessage(
-      //       `Double Press - Time difference: ${newTime - currentTime}`
-      //     );
-      //     currentTime = newTime;
-      //     first = true;
-      //   }
-      // }
     }
   );
 
@@ -193,6 +161,11 @@ suite('Extension Test Suite', () => {
           "default": "findJump.activate",
           "description": "Command to execute when single pressing the key"
         },
+        "double-action.preDoublePressCommand": {
+          "type": "string",
+          "default": "findJump.activateWithSelection",
+          "description": "Command to execute before executing the double press command (I personally use this to exit a previos command)"
+        },
         "double-action.doublePressCommand": {
           "type": "string",
           "default": "findJump.activateWithSelection",
@@ -200,13 +173,8 @@ suite('Extension Test Suite', () => {
         },
         "double-action.doublePressThreshold": {
           "type": "number",
-          "default": 250,
-          "description": "Threshold in milliseconds to consider a double press"
-        },
-        "double-action.showThresholdHelper": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show popup with the time it took to double press to help configure the threshold"
+          "default": 800,
+          "description": "Threshold in milliseconds to consider a double press, it resets the internal boolean after this time"
         }
       }
     }
