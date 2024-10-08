@@ -62,7 +62,6 @@ export function activate(context: vscode.ExtensionContext) {
     "double-action.jump-helper",
     () => {
       if (!first) {
-        vscode.window.showInformationMessage("Double Press");
         first = true;
 
         // This is used personally to exit the previous command
@@ -76,7 +75,6 @@ export function activate(context: vscode.ExtensionContext) {
           timeoutId = null;
         }
       } else {
-        vscode.window.showInformationMessage("Single Press");
         first = false;
         vscode.commands.executeCommand(singlePressCommand);
         timeoutId = setTimeout(() => {
