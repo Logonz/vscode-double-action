@@ -103,13 +103,13 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
+let outputChannel: vscode.OutputChannel;
 /**
  * Prints the given content on the output channel.
  *
  * @param content The content to be printed.
  * @param reveal Whether the output channel should be revealed.
  */
-let outputChannel: vscode.OutputChannel;
 export function printChannelOutput(content: string, reveal = false): void {
   outputChannel.appendLine(content);
   if (reveal) {
