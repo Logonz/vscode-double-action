@@ -20,13 +20,13 @@
   "contributes": {
     "commands": [
       {
-        "command": "double-action.jump-helper",
-        "title": "Double Action: Jump Helper"
+        "command": "double-action.execute",
+        "title": "Double Action: Execute"
       }
     ],
     "keybindings": [
       {
-        "command": "double-action.jump-helper",
+        "command": "double-action.execute",
         "key": "f21",
         "mac": "f21",
         "when": "editorTextFocus"
@@ -35,6 +35,11 @@
     "configuration": {
       "title": "Double Action Configuration",
       "properties": {
+        "double-action.timeoutPress": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the extension will wait for a timeout to execute the single press command rather than executing it immediately and if within the timeout only execute the double press, the default behavior will execute the single press command immediately and the double press command after the double press threshold"
+        },
         "double-action.singlePressCommand": {
           "type": "string",
           "default": "findJump.activate",

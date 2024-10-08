@@ -11,11 +11,11 @@ The **Double Action** extension allows you to bind a single key to two different
 
 ## Commands
 
-- **Double Action: Jump Helper** (`double-action.jump-helper`): The main command that triggers single or double actions based on the key press timing.
+- **Double Action: Jump Helper** (`double-action.execute`): The main command that triggers single or double actions based on the key press timing.
 
 ## Default Keybinding
 
-The default keybinding for the `jump-helper` command is:
+The default keybinding for the `execute` command is:
 
 - **F21**: You can configure the keybinding in your `keybindings.json` file if needed.
 
@@ -23,7 +23,7 @@ The default keybinding for the `jump-helper` command is:
 
 ```json
 {
-  "command": "double-action.jump-helper",
+  "command": "double-action.execute",
   "key": "f21",
   "mac": "f21",
   "when": "editorTextFocus"

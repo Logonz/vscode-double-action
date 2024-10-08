@@ -26,7 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
     .getConfiguration("double-action")
     .get("doublePressThreshold") as number;
 
-
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand
   // The commandId parameter must match the command field in package.json
@@ -59,11 +58,12 @@ export function activate(context: vscode.ExtensionContext) {
   let first = true;
 
   const disposable = vscode.commands.registerCommand(
-    "double-action.jump-helper",
+    "double-action.execute",
     () => {
       if (!first) {
-        first = true;
+        console.log("[Double-Action] Double press detected!");
 
+        first = true;
         // This is used personally to exit the previous command
         if (preDoublePressCommand !== "") {
           vscode.commands.executeCommand(preDoublePressCommand);
@@ -75,10 +75,33 @@ export function activate(context: vscode.ExtensionContext) {
           timeoutId = null;
         }
       } else {
+        console.log("[Double-Action] Single press");
+
         first = false;
         vscode.commands.executeCommand(singlePressCommand);
         timeoutId = setTimeout(() => {
           first = true;
+        }, doublePressThreshold);
+      }
+      
+      if (timeoutId) {
+        // Double press detected
+        clearTimeout(timeoutId);
+        timeoutId = null;
+        console.log("[Double-Action] Double press detected!");
+        // This is used personally to exit the previous command
+        if (preDoublePressCommand !== "") {
+          vscode.commands.executeCommand(preDoublePressCommand);
+        }
+        // Execute your double press command here
+        vscode.commands.executeCommand(doublePressCommand);
+      } else {
+        timeoutId = setTimeout(() => {
+          // Single press
+          timeoutId = null;
+          console.log("[Double-Action] Single press");
+          // Execute your single press command here
+          vscode.commands.executeCommand(singlePressCommand);
         }, doublePressThreshold);
       }
     }
