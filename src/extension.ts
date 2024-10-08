@@ -14,6 +14,10 @@ export function activate(context: vscode.ExtensionContext) {
     .getConfiguration("double-action")
     .get("singlePressCommand") as string;
 
+  let preDoublePressCommand = vscode.workspace
+    .getConfiguration("double-action")
+    .get("preDoublePressCommand") as string;
+
   let doublePressCommand: string = vscode.workspace
     .getConfiguration("double-action")
     .get("doublePressCommand") as string;
@@ -22,9 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
     .getConfiguration("double-action")
     .get("doublePressThreshold") as number;
 
-  let showThresholdHelper: boolean = vscode.workspace
-    .getConfiguration("double-action")
-    .get("showThresholdHelper") as boolean;
 
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand
@@ -34,63 +35,53 @@ export function activate(context: vscode.ExtensionContext) {
       console.log("Configuration changed");
       if (
         event.affectsConfiguration("double-action.singlePressCommand") ||
+        event.affectsConfiguration("double-action.preDoublePressCommand") ||
         event.affectsConfiguration("double-action.doublePressCommand") ||
-        event.affectsConfiguration("double-action.doublePressThreshold") ||
-        event.affectsConfiguration("double-action.showThresholdHelper")
+        event.affectsConfiguration("double-action.doublePressThreshold")
       ) {
         singlePressCommand = vscode.workspace
           .getConfiguration("double-action")
           .get("singlePressCommand") as string;
+        preDoublePressCommand = vscode.workspace
+          .getConfiguration("double-action")
+          .get("preDoublePressCommand") as string;
         doublePressCommand = vscode.workspace
           .getConfiguration("double-action")
           .get("doublePressCommand") as string;
         doublePressThreshold = vscode.workspace
           .getConfiguration("double-action")
           .get("doublePressThreshold") as number;
-        showThresholdHelper = vscode.workspace
-          .getConfiguration("double-action")
-          .get("showThresholdHelper") as boolean;
       }
     })
   );
 
   let timeoutId: NodeJS.Timeout | null = null;
   let first = true;
-  let currentTime = new Date().getTime();
 
   const disposable = vscode.commands.registerCommand(
     "double-action.jump-helper",
     () => {
-      if (!showThresholdHelper) {
+      if (!first) {
+        vscode.window.showInformationMessage("Double Press");
+        first = true;
+
+        // This is used personally to exit the previous command
+        if (preDoublePressCommand !== "") {
+          vscode.commands.executeCommand(preDoublePressCommand);
+        }
+        vscode.commands.executeCommand(doublePressCommand);
+
         if (timeoutId) {
-          // Double press detected
           clearTimeout(timeoutId);
           timeoutId = null;
-          console.log("[Double-Action] Double press detected!");
-          // Execute your double press command here
-          vscode.commands.executeCommand(doublePressCommand);
-        } else {
-          timeoutId = setTimeout(() => {
-            // Single press
-            timeoutId = null;
-            console.log("[Double-Action] Single press");
-            // Execute your single press command here
-            vscode.commands.executeCommand(singlePressCommand);
-          }, doublePressThreshold);
         }
       } else {
-        if (first) {
-          vscode.window.showInformationMessage("Single Press");
-          currentTime = new Date().getTime();
-          first = false;
-        } else {
-          const newTime = new Date().getTime();
-          vscode.window.showInformationMessage(
-            `Double Press - Time difference: ${newTime - currentTime}`
-          );
-          currentTime = newTime;
+        vscode.window.showInformationMessage("Single Press");
+        first = false;
+        vscode.commands.executeCommand(singlePressCommand);
+        timeoutId = setTimeout(() => {
           first = true;
-        }
+        }, doublePressThreshold);
       }
     }
   );

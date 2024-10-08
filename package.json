@@ -37,6 +37,11 @@
           "default": "findJump.activate",
           "description": "Command to execute when single pressing the key"
         },
+        "double-action.preDoublePressCommand": {
+          "type": "string",
+          "default": "findJump.activateWithSelection",
+          "description": "Command to execute before executing the double press command (I personally use this to exit a previos command)"
+        },
         "double-action.doublePressCommand": {
           "type": "string",
           "default": "findJump.activateWithSelection",
@@ -44,13 +49,8 @@
         },
         "double-action.doublePressThreshold": {
           "type": "number",
-          "default": 250,
-          "description": "Threshold in milliseconds to consider a double press"
-        },
-        "double-action.showThresholdHelper": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show popup with the time it took to double press to help configure the threshold"
+          "default": 800,
+          "description": "Threshold in milliseconds to consider a double press, it resets the internal boolean after this time"
         }
       }
     }

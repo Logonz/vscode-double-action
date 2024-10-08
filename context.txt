@@ -1,0 +1,242 @@
+// The module 'vscode' contains the VS Code extensibility API
+// Import the module and reference it with the alias vscode in your code below
+import * as vscode from "vscode";
+
+// This method is called when your extension is activated
+// Your extension is activated the very first time the command is executed
+export function activate(context: vscode.ExtensionContext) {
+  // Use the console to output diagnostic information (console.log) and errors (console.error)
+  // This line of code will only be executed once when your extension is activated
+  console.log('Congratulations, your extension "double-action" is now active!');
+
+  // Read the configuration settings
+  let singlePressCommand: string = vscode.workspace
+    .getConfiguration("double-action")
+    .get("singlePressCommand") as string;
+
+  let doublePressCommand: string = vscode.workspace
+    .getConfiguration("double-action")
+    .get("doublePressCommand") as string;
+
+  let doublePressThreshold: number = vscode.workspace
+    .getConfiguration("double-action")
+    .get("doublePressThreshold") as number;
+
+  let showThresholdHelper: boolean = vscode.workspace
+    .getConfiguration("double-action")
+    .get("showThresholdHelper") as boolean;
+
+  // The command has been defined in the package.json file
+  // Now provide the implementation of the command with registerCommand
+  // The commandId parameter must match the command field in package.json
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      console.log("Configuration changed");
+      if (
+        event.affectsConfiguration("double-action.singlePressCommand") ||
+        event.affectsConfiguration("double-action.doublePressCommand") ||
+        event.affectsConfiguration("double-action.doublePressThreshold") ||
+        event.affectsConfiguration("double-action.showThresholdHelper")
+      ) {
+        singlePressCommand = vscode.workspace
+          .getConfiguration("double-action")
+          .get("singlePressCommand") as string;
+        doublePressCommand = vscode.workspace
+          .getConfiguration("double-action")
+          .get("doublePressCommand") as string;
+        doublePressThreshold = vscode.workspace
+          .getConfiguration("double-action")
+          .get("doublePressThreshold") as number;
+        showThresholdHelper = vscode.workspace
+          .getConfiguration("double-action")
+          .get("showThresholdHelper") as boolean;
+      }
+    })
+  );
+
+  let timeoutId: NodeJS.Timeout | null = null;
+  let first = true;
+  let currentTime = new Date().getTime();
+
+  const allKeysDisposable = vscode.commands.registerCommand("*", (args) => {
+    // This will be called for every key press
+    console.log("Key pressed:", args);
+    // You can add your logic here to handle different key presses
+  });
+
+  const disposable = vscode.commands.registerCommand(
+    "double-action.jump-helper",
+    () => {
+      if (!first) {
+        vscode.window.showInformationMessage("Double Press");
+        first = true;
+        vscode.commands.executeCommand(doublePressCommand);
+        vscode.commands.executeCommand(doublePressCommand);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+      } else {
+        vscode.window.showInformationMessage("Single Press");
+        first = false;
+        vscode.commands.executeCommand(singlePressCommand);
+        timeoutId = setTimeout(() => {
+          first = true;
+        }, 800);
+      }
+      // if (!showThresholdHelper) {
+      //   if (timeoutId) {
+      //     // Double press detected
+      //     clearTimeout(timeoutId);
+      //     timeoutId = null;
+      //     console.log("[Double-Action] Double press detected!");
+      //     // Execute your double press command here
+      //     vscode.commands.executeCommand(doublePressCommand);
+      //   } else {
+      //     timeoutId = setTimeout(() => {
+      //       // Single press
+      //       timeoutId = null;
+      //       console.log("[Double-Action] Single press");
+      //       // Execute your single press command here
+      //       vscode.commands.executeCommand(singlePressCommand);
+      //     }, doublePressThreshold);
+      //   }
+      // } else {
+      //   if (first) {
+      //     vscode.window.showInformationMessage("Single Press");
+      //     currentTime = new Date().getTime();
+      //     first = false;
+      //   } else {
+      //     const newTime = new Date().getTime();
+      //     vscode.window.showInformationMessage(
+      //       `Double Press - Time difference: ${newTime - currentTime}`
+      //     );
+      //     currentTime = newTime;
+      //     first = true;
+      //   }
+      // }
+    }
+  );
+
+  outputChannel = vscode.window.createOutputChannel("Double Action");
+  printChannelOutput("Started");
+  context.subscriptions.push(disposable);
+}
+
+// This method is called when your extension is deactivated
+export function deactivate() {}
+
+let outputChannel: vscode.OutputChannel;
+/**
+ * Prints the given content on the output channel.
+ *
+ * @param content The content to be printed.
+ * @param reveal Whether the output channel should be revealed.
+ */
+export function printChannelOutput(content: string, reveal = false): void {
+  outputChannel.appendLine(content);
+  if (reveal) {
+    outputChannel.show(true);
+  }
+}
+import * as assert from 'assert';
+
+// You can import and use all API from the 'vscode' module
+// as well as import your extension to test it
+import * as vscode from 'vscode';
+// import * as myExtension from '../../extension';
+
+suite('Extension Test Suite', () => {
+	vscode.window.showInformationMessage('Start all tests.');
+
+	test('Sample test', () => {
+		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
+		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+	});
+});
+{
+  "name": "double-action",
+  "displayName": "double-action",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.1"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Logonz/vscode-double-action.git"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "double-action.jump-helper",
+        "title": "Double Action: Jump Helper"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "double-action.jump-helper",
+        "key": "f21",
+        "mac": "f21",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Double Action Configuration",
+      "properties": {
+        "double-action.singlePressCommand": {
+          "type": "string",
+          "default": "findJump.activate",
+          "description": "Command to execute when single pressing the key"
+        },
+        "double-action.doublePressCommand": {
+          "type": "string",
+          "default": "findJump.activateWithSelection",
+          "description": "Command to execute when double pressing the key"
+        },
+        "double-action.doublePressThreshold": {
+          "type": "number",
+          "default": 250,
+          "description": "Threshold in milliseconds to consider a double press"
+        },
+        "double-action.showThresholdHelper": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show popup with the time it took to double press to help configure the threshold"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "ext": "vsce package -o vscode-double-action.vsix && code --install-extension vscode-double-action.vsix",
+    "vsix": "vsce package -o vscode-double-action.vsix",
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.8",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.89.1",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.1.1",
+    "eslint": "^9.11.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.6.2",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
