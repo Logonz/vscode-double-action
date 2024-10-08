@@ -1,0 +1,86 @@
+{
+  "name": "double-action",
+  "displayName": "double-action",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.1"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Logonz/vscode-double-action.git"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "double-action.jump-helper",
+        "title": "Double Action: Jump Helper"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "double-action.jump-helper",
+        "key": "f21",
+        "mac": "f21",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Double Action Configuration",
+      "properties": {
+        "double-action.singlePressCommand": {
+          "type": "string",
+          "default": "findJump.activate",
+          "description": "Command to execute when single pressing the key"
+        },
+        "double-action.doublePressCommand": {
+          "type": "string",
+          "default": "findJump.activateWithSelection",
+          "description": "Command to execute when double pressing the key"
+        },
+        "double-action.doublePressThreshold": {
+          "type": "number",
+          "default": 250,
+          "description": "Threshold in milliseconds to consider a double press"
+        },
+        "double-action.showThresholdHelper": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show popup with the time it took to double press to help configure the threshold"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "ext": "vsce package -o vscode-double-action.vsix && code --install-extension vscode-double-action.vsix",
+    "vsix": "vsce package -o vscode-double-action.vsix",
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.8",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.89.1",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.1.1",
+    "eslint": "^9.11.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.6.2",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
