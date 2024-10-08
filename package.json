@@ -1,10 +1,10 @@
 {
   "name": "double-action",
-  "displayName": "double-action",
+  "displayName": "Double Action",
   "description": "Double Action is a Visual Studio Code extension that allows you to bind two commands to a single key, one for a single press and another for a double press.",
   "version": "1.0.0",
   "publisher": "Logonz",
-  "icon": "icon.png",
+  "icon": "icon.jpg",
   "license": "MIT",
   "engines": {
     "vscode": "^1.89.1"
