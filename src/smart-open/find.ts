@@ -75,8 +75,8 @@ function initalizeListener(context: vscode.ExtensionContext) {
   const createD = watcher.onDidCreate(debouncedOnDidCreate);
   // watcher.onDidChange(debouncedOnDidChange);
   const deleteD = watcher.onDidDelete((uri) => {
-    // We use a interval to make sure the file is deleted after the debounce delay
-    setInterval(() => {
+    // We use a timeout to make sure the file is deleted after the debounce delay
+    setTimeout(() => {
       printChannelOutput(`On File Delete : URI: ${uri}`);
       filesToIcon.delete(uri.fsPath);
     }, debounceDelay + 50);
