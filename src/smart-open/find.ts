@@ -75,8 +75,11 @@ function initalizeListener(context: vscode.ExtensionContext) {
   const createD = watcher.onDidCreate(debouncedOnDidCreate);
   // watcher.onDidChange(debouncedOnDidChange);
   const deleteD = watcher.onDidDelete((uri) => {
-    printChannelOutput(`On File Delete : URI: ${uri}`);
-    filesToIcon.delete(uri.fsPath);
+    // We use a interval to make sure the file is deleted after the debounce delay
+    setInterval(() => {
+      printChannelOutput(`On File Delete : URI: ${uri}`);
+      filesToIcon.delete(uri.fsPath);
+    }, debounceDelay + 50);
   });
 
   context.subscriptions.push(createD);
@@ -220,7 +223,6 @@ async function GenerateItemList(
     const uncommonParts = fileParts.filter(
       (part) => !activeEditorPathParts.includes(part)
     );
-    
 
     // TODO: Should we subtract the common parts from the total parts?
     closeScore = Math.max(0, commonParts.length - uncommonParts.length);
@@ -317,19 +319,32 @@ async function GenerateItemList(
           // printChannelOutput(`Frequency Mapped: ${frequencyScoreMapped}`, true);
           // printChannelOutput(`Final Score: ${finalScore}`, true);
 
-          let descriptions: string[] = []
-          descriptions.push(`${fs.relativePath} - (fnl:${finalScore.toFixed(2)})=`)
-          descriptions.push(`(raw:${(fs.rawScore * scoreWeights.matchQuality).toFixed(2)})`)
-          descriptions.push(`(rec:${(recencyScoreMapped * scoreWeights.recency).toFixed(2)})`)
-          descriptions.push(`(frq:${(frequencyScoreMapped * scoreWeights.frequency).toFixed(2)})`)
-          descriptions.push(`(cls:${(closeScoreMapped * scoreWeights.close).toFixed(2)})`)
+          let descriptions: string[] = [];
+          descriptions.push(
+            `${fs.relativePath} - (fnl:${finalScore.toFixed(2)})=`
+          );
+          descriptions.push(
+            `(raw:${(fs.rawScore * scoreWeights.matchQuality).toFixed(2)})`
+          );
+          descriptions.push(
+            `(rec:${(recencyScoreMapped * scoreWeights.recency).toFixed(2)})`
+          );
+          descriptions.push(
+            `(frq:${(frequencyScoreMapped * scoreWeights.frequency).toFixed(
+              2
+            )})`
+          );
+          descriptions.push(
+            `(cls:${(closeScoreMapped * scoreWeights.close).toFixed(2)})`
+          );
 
-          const description = descriptions.map((desc) => {
-            if (!desc.includes(":0.00)") && !desc.includes(":0)")) {
-              return desc
-            }
-          }).join("")
-
+          const description = descriptions
+            .map((desc) => {
+              if (!desc.includes(":0.00)") && !desc.includes(":0)")) {
+                return desc;
+              }
+            })
+            .join("");
 
           return {
             // label: fs.relativePath,
