@@ -22,6 +22,22 @@
       {
         "command": "double-action.execute",
         "title": "Double Action: Execute"
+      },
+      {
+        "command": "double-action.repeatExecute",
+        "title": "Double Action: repeatExecute"
+      },
+      {
+        "command": "double-action.repeatExit",
+        "title": "Double Action: repeatExit"
+      },
+      {
+        "command": "double-action.runFzf",
+        "title": "Double Action: runFzf"
+      },
+      {
+        "command": "double-action.quickOpenFzy",
+        "title": "Double Action: quickOpenFzy"
       }
     ],
     "keybindings": [
@@ -30,6 +46,47 @@
         "key": "f21",
         "mac": "f21",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "double-action.repeatExit",
+        "key": "escape",
+        "mac": "escape",
+        "args": {
+          "contextString": "da-dot-repeat"
+        },
+        "when": "da-dot-repeat == true"
+      },
+      {
+        "command": "double-action.repeatExecute",
+        "key": "alt+a",
+        "mac": "alt+a",
+        "args": {
+          "contextString": "da-dot-repeat",
+          "command": "editor.action.smartSelect.expand"
+        },
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "double-action.repeatExecute",
+        "key": "up",
+        "mac": "up",
+        "args": {
+          "repeat": true,
+          "contextString": "da-dot-repeat",
+          "command": "editor.action.smartSelect.expand"
+        },
+        "when": "editorTextFocus && da-dot-repeat == true"
+      },
+      {
+        "command": "double-action.repeatExecute",
+        "key": "down",
+        "mac": "down",
+        "args": {
+          "repeat": true,
+          "contextString": "da-dot-repeat",
+          "command": "editor.action.smartSelect.shrink"
+        },
+        "when": "editorTextFocus && da-dot-repeat == true"
       }
     ],
     "configuration": {
