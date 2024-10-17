@@ -10,7 +10,7 @@ const iconLanguageIds = new Map<string, vscode.Uri>();
 const iconFileExtensions = new Map<string, vscode.Uri>();
 
 export function LoadIcons() {
-  printChannelOutput("Loading icons", true);
+  printChannelOutput("Loading icons", false);
   const configuration = vscode.workspace.getConfiguration();
 
   console.log(configuration, configuration.workbench.iconTheme);
@@ -99,7 +99,7 @@ export function LoadIcons() {
       console.error(`Error reading or parsing icon JSON file: ${error}`);
     }
   }
-  printChannelOutput("Icons loaded", true);
+  printChannelOutput("Icons loaded", false);
 }
 
 export async function GetIconForFile(file: vscode.Uri): Promise<vscode.Uri | undefined> {
@@ -127,7 +127,7 @@ export async function GetIconForFile(file: vscode.Uri): Promise<vscode.Uri | und
     console.log(gIcon);
     return gIcon;
   } else {
-    printChannelOutput(`No icon found for ${fileDoc.fileName}`, true);
+    printChannelOutput(`No icon found for ${fileDoc.fileName}`, false);
     return undefined;
   }
 }

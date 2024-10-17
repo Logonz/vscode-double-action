@@ -102,5 +102,5 @@ export function activateDoubleAction(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(disposable);
 
-  printChannelOutput("Double Action activated", true);
+  printChannelOutput("Double Action activated", false);
 }

@@ -18,5 +18,5 @@ export function activateSmartOpen(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(quickOpen);
 
-  printChannelOutput("Smart Open activated", true);
+  printChannelOutput("Smart Open activated", false);
 }

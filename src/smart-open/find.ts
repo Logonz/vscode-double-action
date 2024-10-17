@@ -33,7 +33,7 @@ const filesToIcon = new Map<string, vscode.Uri>();
 let files: string[] = [];
 
 function getAllFileIcons(files: vscode.Uri[]) {
-  printChannelOutput(`Getting all file icons`, true);
+  printChannelOutput(`Getting all file icons`, false);
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     // GetIconForFile(vscode.Uri.file(file)).then((icon) => {
@@ -202,7 +202,7 @@ async function GenerateItemList(
   console.log(activeEditorPathParts);
   printChannelOutput(
     `Number of parts of active: ${activeEditorPathParts?.length}`,
-    true
+    false
   );
 
   // First, compute the scores for all files
