@@ -10,7 +10,7 @@ export function activateSmartOpen(context: vscode.ExtensionContext) {
   InitializeFind(context);
 
   let quickOpen = vscode.commands.registerCommand(
-    "double-action.quickOpenFzy",
+    "double-action.SmartOpen",
     async () => {
       await SpawnQuickPick();
     }

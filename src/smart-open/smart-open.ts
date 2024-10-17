@@ -18,9 +18,9 @@ export function getFileMetadata(context: vscode.ExtensionContext): Record<string
   return context.globalState.get<Record<string, FileMetadata>>(METADATA_KEY, {});
 }
 
-export async function updateFileMetadata(context: vscode.ExtensionContext, filePath: string): Promise<void> {
+export async function updateFileMetadata(context: vscode.ExtensionContext, filePath: string, time: number = Date.now()): Promise<void> {
   const metadata = getFileMetadata(context);
-  const currentTime = Date.now();
+  const currentTime = time;
 
   if (metadata[filePath]) {
     metadata[filePath].lastOpened = currentTime;
@@ -54,7 +54,8 @@ export function calculateRecencyScore(lastOpened: number, currentTime: number, d
   const timeDifference = currentTime - lastOpened; // in milliseconds
   const daysDifference = timeDifference / (1000 * 60 * 60 * 24); // convert to days
   const score = Math.exp(-decayRate * daysDifference);
-  return score;
+  // If score is NaN, return 0
+  return isNaN(score) ? 0 : score;
 }
 
 // Clean up file metadata that is older than 30 days + openCount / 50 days.

@@ -59,6 +59,9 @@ function initalizeListener(context: vscode.ExtensionContext) {
   // TODO: Make these just scan the current file and not all files
   const debouncedOnDidCreate = debounce(async (uri: vscode.Uri) => {
     printChannelOutput(`On File Create : URI: ${uri}`);
+    if (uri.path.includes("/.git/")) {
+      return;
+    }
     files = await GetAllFilesInWorkspace();
     getAllFileIcons(files.map((file) => vscode.Uri.file(file)));
   }, debounceDelay);
@@ -75,6 +78,9 @@ function initalizeListener(context: vscode.ExtensionContext) {
   const createD = watcher.onDidCreate(debouncedOnDidCreate);
   // watcher.onDidChange(debouncedOnDidChange);
   const deleteD = watcher.onDidDelete((uri) => {
+    if (uri.path.includes("/.git/")) {
+      return;
+    }
     // We use a timeout to make sure the file is deleted after the debounce delay
     setTimeout(() => {
       printChannelOutput(`On File Delete : URI: ${uri}`);
@@ -191,11 +197,6 @@ async function GenerateItemList(
 
   const currentActiveEditor = vscode.window.activeTextEditor;
 
-  // Remove current file from the list
-  files = files.filter(
-    (file) => file !== currentActiveEditor?.document.uri.fsPath
-  );
-
   const activeEditorPathParts = vscode.workspace
     .asRelativePath(currentActiveEditor?.document.uri.fsPath || "")
     .split("/");
@@ -306,13 +307,17 @@ async function GenerateItemList(
             maxScore == 0 ? 100 : maxScore, // If nothing is matched we still want score for closeness
             fs.closeScore
           );
-          const finalScore = calculateCompositeScore(
-            fs.rawScore,
-            recencyScoreMapped,
-            frequencyScoreMapped,
-            closeScoreMapped,
+          let finalScore = calculateCompositeScore(
+            isNaN(fs.rawScore) ? 0 : fs.rawScore,
+            isNaN(recencyScoreMapped) ? 0 : recencyScoreMapped,
+            isNaN(frequencyScoreMapped) ? 0 : frequencyScoreMapped,
+            isNaN(closeScoreMapped) ? 0 : closeScoreMapped,
             scoreWeights
           );
+          if (fs.filePath === currentActiveEditor?.document.uri.fsPath) {
+            // Penalize the current file by 10%
+            finalScore = finalScore * 0.9;
+          }
           // printChannelOutput(`File: ${fs.relativePath}`, true);
           // printChannelOutput(`Open count: ${openCount}`, true);
           // printChannelOutput(`Recency Mapped: ${recencyScoreMapped}`, true);
