@@ -48,16 +48,16 @@
         "key": "escape",
         "mac": "escape",
         "args": {
-          "contextString": "da-dot-repeat"
+          "contextId": "da-smart-select-repeat"
         },
-        "when": "da-dot-repeat == true"
+        "when": "da-smart-select-repeat == true"
       },
       {
         "command": "double-action.repeatExecute",
         "key": "alt+a",
         "mac": "alt+a",
         "args": {
-          "contextString": "da-dot-repeat",
+          "contextId": "da-smart-select-repeat",
           "command": "editor.action.smartSelect.expand"
         },
         "when": "editorTextFocus"
@@ -67,22 +67,20 @@
         "key": "up",
         "mac": "up",
         "args": {
-          "repeat": true,
-          "contextString": "da-dot-repeat",
+          "contextId": "da-smart-select-repeat",
           "command": "editor.action.smartSelect.expand"
         },
-        "when": "editorTextFocus && da-dot-repeat == true"
+        "when": "editorTextFocus && da-smart-select-repeat == true"
       },
       {
         "command": "double-action.repeatExecute",
         "key": "down",
         "mac": "down",
         "args": {
-          "repeat": true,
-          "contextString": "da-dot-repeat",
+          "contextId": "da-smart-select-repeat",
           "command": "editor.action.smartSelect.shrink"
         },
-        "when": "editorTextFocus && da-dot-repeat == true"
+        "when": "editorTextFocus && da-smart-select-repeat == true"
       }
     ],
     "configuration": {
