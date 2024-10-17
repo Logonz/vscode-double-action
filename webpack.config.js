@@ -44,5 +44,49 @@ const extensionConfig = {
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
   },
+  plugins: [
+    {
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap("AfterEmitPlugin", (compilation) => {
+          console.log("Compilation finished");
+          // If env "watch" is set, copy the files
+          if (process.env.NODE_ENV?.includes("watch=true")) {
+            console.log("In watch mode, Copying files");
+            // Copy the package.json file and the dist folder to the extension folder
+            // %userprofile%\.vscode\extensions\logonz.double-action-1.0.2
+            // Get version from package.json
+            const version = require("./package.json").version;
+            // Get home directory
+            const homedir = require("os").homedir();
+            // Copy package.json to dist folder
+            const fs = require("fs");
+            fs.copyFileSync(
+              "package.json",
+              path.join(
+                homedir,
+                `.vscode\\extensions\\logonz.double-action-${version}\\package.json`
+              )
+            );
+            // Copy dist folder to extension folder
+            // Get all files in dist folder
+            const files = fs.readdirSync("dist");
+            // Copy each file to extension folder
+            for (const file of files) {
+              fs.copyFileSync(
+                `dist/${file}`,
+                path.join(
+                  homedir,
+                  `.vscode\\extensions\\logonz.double-action-${version}\\dist\\${file}`
+                )
+              );
+            }
+          } else {
+            console.log("Not in watch mode, skipping copy");
+            return;
+          }
+        });
+      },
+    },
+  ],
 };
 module.exports = [extensionConfig];
