@@ -3,20 +3,67 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+		// {
+		// 	"type": "npm",
+		// 	"script": "twatch",
+		// 	"problemMatcher": "$ts-webpack-watch",
+		// 	"isBackground": true,
+		// 	"options": {
+		// 		"env": {
+		// 			"NON_INTERACTIVE": "true"
+		// 		}
+		// 	},
+		// 	"presentation": {
+		// 		"reveal": "never",
+		// 		"group": "watchers"
+		// 	},
+		// 	"group": {
+		// 		"kind": "build",
+		// 		"isDefault": true
+		// 	}
+		// },
 		{
-			"type": "npm",
-			"script": "watch",
-			"problemMatcher": "$ts-webpack-watch",
-			"isBackground": true,
-			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
+			"type":"shell",
+			"label": "tcompile",
+			"command": "npm run tcompile",
+			"options": {
+				"env": {
+					"NON_INTERACTIVE": "true"
+				}
 			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"presentation": {
+				"reveal": "never",
+				"panel": "dedicated",
+				"group": "watchers"
+			},
+			"problemMatcher": "$ts-webpack-watch",
+			"isBackground": true
 		},
+		// {
+		// 	"type":"shell",
+		// 	"label": "watch",
+		// 	"command": "npm run twatch",
+		// 	"options": {
+		// 		"env": {
+		// 			"NON_INTERACTIVE": "true"
+		// 		}
+		// 	},
+		// 	"group": {
+		// 		"kind": "build",
+		// 		"isDefault": true
+		// 	},
+		// 	"presentation": {
+		// 		"reveal": "never",
+		// 		"panel": "dedicated",
+		// 		"group": "watchers"
+		// 	},
+		// 	"problemMatcher": "$ts-webpack-watch",
+		// 	"isBackground": true
+		// },
 		{
 			"type": "npm",
 			"script": "watch-tests",

@@ -5,8 +5,12 @@ import { InlineInput } from "./dot-repeat/inlineInput";
 import { activateSmartOpen } from "./smart-open/main";
 import { activateDotRepeat } from "./dot-repeat/main";
 import { activateDoubleAction } from "./double-action/main";
+try {
+ require("./debug");
+} catch (e) {
+  console.log("Error importing debug.ts");
+}
 
-export let DAcontext: vscode.ExtensionContext;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed

@@ -10,12 +10,17 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"${workspaceFolder}/../vscode-smart-open/.",
+				"--profile=VSCodeDev",
+				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			// "preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"NODE_ENV": "development"
+			}
 		}
 	]
 }
