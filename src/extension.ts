@@ -5,12 +5,37 @@ import { InlineInput } from "./dot-repeat/inlineInput";
 import { activateSmartOpen } from "./smart-open/main";
 import { activateDotRepeat } from "./dot-repeat/main";
 import { activateDoubleAction } from "./double-action/main";
+import { activateJump } from "./jump/main";
+import { activateGit } from "./git/main";
+
 try {
  require("./debug");
 } catch (e) {
   console.log("Error importing debug.ts");
 }
 
+let activateFunctions: {
+  name: string;
+  func: (context: vscode.ExtensionContext) => void;
+}[] = [
+  { name: "Double Action", func: activateDoubleAction },
+  { name: "Dot Repeat", func: activateDotRepeat },
+  { name: "Smart Open", func: activateSmartOpen },
+  { name: "Jump", func: activateJump },
+  { name: "Git", func: activateGit },
+];
+let deactivateFunctions: { name: string; func: () => void }[] = [
+  { name: "Double Action", func: () => {} },
+  { name: "Dot Repeat", func: () => {} },
+  { name: "Smart Open", func: () => {} },
+  { name: "Jump", func: () => {} },
+  { name: "Git", func: () => {} },
+];
+
+let DAcontext: vscode.ExtensionContext;
+export function getExtensionContext(): vscode.ExtensionContext {
+  return DAcontext;
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -23,11 +48,21 @@ export function activate(context: vscode.ExtensionContext) {
   // This line of code will only be executed once when your extension is activated
   console.log('Congratulations, your extension "double-action" is now active!');
 
-  activateDoubleAction(context);
+  // activateDoubleAction(context);
 
-  activateDotRepeat(context);
+  // activateDotRepeat(context);
 
-  activateSmartOpen(context);
+  // activateSmartOpen(context);
+
+  // activateJump(context);
+
+  // activateGit(context);
+
+  activateFunctions.forEach((func) => {
+    printChannelOutput(`---> Loading Module: ${func.name}`);
+    console.log(`---> Loading Module: ${func.name}`);
+    func.func(context);
+  });
 }
 
 // This method is called when your extension is deactivated
