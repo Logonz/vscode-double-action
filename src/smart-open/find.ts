@@ -8,14 +8,18 @@ import fs from "fs";
 import ignore from "ignore";
 
 import { GetIconForFile, LoadIcons } from "./icons";
-import { DAcontext, printChannelOutput } from "../extension";
+import { getExtensionContext, printChannelOutput } from "../extension";
 import {
   MAX_FREQUENCY_SCORE,
+  getFileMetadata,
+  // initializeMetadata,
+  updateFileMetadata,
+} from "./metadata";
+import { 
   calculateCompositeScore,
   calculateRecencyScore,
-  getFileMetadata,
-  updateFileMetadata,
-} from "./smart-open";
+} from "./score";
+import { CustomEditorLabelService, ICustomEditorLabelPatterns } from "../helpers/customEditorLabelService";
 
 // Own interface extending QuickPickItem
 export interface FileQuickPickItem extends vscode.QuickPickItem {
@@ -30,7 +34,7 @@ export interface FileQuickPickItem extends vscode.QuickPickItem {
 
 const filesToIcon = new Map<string, vscode.Uri>();
 // All files in the workspace
-let files: string[] = [];
+let files: vscode.Uri[] = [];
 
 function getAllFileIcons(files: vscode.Uri[]) {
   printChannelOutput(`Getting all file icons`, false);
@@ -59,11 +63,13 @@ function initalizeListener(context: vscode.ExtensionContext) {
   // TODO: Make these just scan the current file and not all files
   const debouncedOnDidCreate = debounce(async (uri: vscode.Uri) => {
     printChannelOutput(`On File Create : URI: ${uri}`);
+    console.log(`On File Create : URI: ${uri}`);
     if (uri.path.includes("/.git/")) {
       return;
     }
+    // initializeMetadata(DAcontext, uri.fsPath);
     files = await GetAllFilesInWorkspace();
-    getAllFileIcons(files.map((file) => vscode.Uri.file(file)));
+    getAllFileIcons(files);
   }, debounceDelay);
 
   // TODO: Make these just scan the current file and not all files
@@ -78,6 +84,7 @@ function initalizeListener(context: vscode.ExtensionContext) {
   const createD = watcher.onDidCreate(debouncedOnDidCreate);
   // watcher.onDidChange(debouncedOnDidChange);
   const deleteD = watcher.onDidDelete((uri) => {
+    console.log(`On File Delete : URI: ${uri}`);
     if (uri.path.includes("/.git/")) {
       return;
     }
@@ -99,8 +106,14 @@ export async function InitializeFind(context: vscode.ExtensionContext) {
   LoadIcons();
 
   files = await GetAllFilesInWorkspace();
+
+  // If the there are no metadata for the files initialize them
+  // files.forEach((file) => {
+  //   initializeMetadata(DAcontext, file);
+  // });
+
   // * Get all files in the workspace
-  getAllFileIcons(files.map((file) => vscode.Uri.file(file)));
+  getAllFileIcons(files);
 
   // * Initialize the listener
   initalizeListener(context);
@@ -127,7 +140,7 @@ export async function InitializeFind(context: vscode.ExtensionContext) {
       vscode.window.showTextDocument(filePath);
 
       // Update metadata
-      await updateFileMetadata(DAcontext, selectedItem.filePath);
+      await updateFileMetadata(getExtensionContext(), selectedItem.filePath);
     }
     quickPickObject.hide();
   });
@@ -165,13 +178,14 @@ function mapNumberRange(
   r2l: number,
   r2h: number,
   num: number
-) {
-  return r2l + ((num - r1l) * (r2h - r2l)) / (r1h - r1l);
+): number {
+  const mappedValue = r2l + ((num - r1l) * (r2h - r2l)) / (r1h - r1l);
+  return isNaN(mappedValue) ? 0 : mappedValue;
 }
 
 async function GenerateItemList(
   needle: string,
-  files: string[]
+  files: vscode.Uri[]
 ): Promise<FileQuickPickItem[]> {
   // Due to the bug that is sorting in quick pick, it basically only works either with 0 or 2 characters
   // TODO: When the bug is fixed and we can do our own sorting, we can remove this (https://github.com/microsoft/vscode/issues/73904)
@@ -191,8 +205,47 @@ async function GenerateItemList(
       },
     ];
   }
+  // Split needle into characters
+  const needleParts = needle.toLowerCase().split("");
 
-  const metadata = getFileMetadata(DAcontext);
+
+  let internalFiles: { uri: vscode.Uri, customLabel: string, relativePath: string, fsPath: string}[] = [];
+  // Check if custom labels are enabled
+  const customLabelsEnabled: boolean | undefined = vscode.workspace.getConfiguration("workbench").get<boolean>("editor.customLabels.enabled");
+  if (customLabelsEnabled && customLabelsEnabled === true) {
+    const customLabelsPatterns: ICustomEditorLabelPatterns | undefined = vscode.workspace.getConfiguration("workbench").get<ICustomEditorLabelPatterns>("editor.customLabels.patterns");
+    if (customLabelsPatterns) {
+      const labelService = new CustomEditorLabelService(customLabelsPatterns);
+      files.forEach((file) => {
+        const label = labelService.getName(file);
+        const fileObject = {
+          uri: file,
+          fsPath: file.fsPath,
+          relativePath: vscode.workspace.asRelativePath(file),
+          customLabel: label ? label : vscode.workspace.asRelativePath(file),
+        }
+        let addFile = true;
+        for (let i = 0; i < needleParts.length; i++) {
+          const part = needleParts[i];
+          if (!fileObject.customLabel.toLowerCase().includes(part)) {
+            addFile = false;
+            break;
+          }
+        }
+        if (addFile) {
+          console.log("Adding file:", fileObject);
+          internalFiles.push(fileObject);
+        }
+      });
+    }
+  } else {
+    internalFiles = internalFiles.map((file) => {
+      return file;
+    });
+  }
+  console.log(internalFiles);
+
+  const metadata = getFileMetadata(getExtensionContext());
   const currentTime = Date.now();
 
   const currentActiveEditor = vscode.window.activeTextEditor;
@@ -207,17 +260,17 @@ async function GenerateItemList(
   );
 
   // First, compute the scores for all files
-  const fileScores = files.map((file): FileQuickPickItem => {
-    const relativePath = vscode.workspace.asRelativePath(file);
-    const rawScore = score(needle, relativePath);
+  const fileScores = internalFiles.map((file): FileQuickPickItem => {
+    // const relativePath = vscode.workspace.asRelativePath(file);
+    const rawScore = score(needle, file.customLabel);
 
-    const fileMeta = metadata[file];
+    const fileMeta = metadata[file.fsPath];
     const lastOpened = fileMeta ? fileMeta.lastOpened : 0;
     const openCount = fileMeta ? fileMeta.openCount : 0;
 
     // Calculate the close score based on path overlap with the active editor
     let closeScore = 0;
-    const fileParts = relativePath.split("/");
+    const fileParts = vscode.workspace.asRelativePath(file.uri).split("/");
     const commonParts = fileParts.filter((part) =>
       activeEditorPathParts.includes(part)
     );
@@ -228,9 +281,9 @@ async function GenerateItemList(
     // TODO: Should we subtract the common parts from the total parts?
     closeScore = Math.max(0, commonParts.length - uncommonParts.length);
     return {
-      label: "",
-      filePath: file,
-      relativePath: relativePath,
+      label: file.customLabel,
+      filePath: file.fsPath,
+      relativePath: file.relativePath,
       rawScore: rawScore,
       recencyScore: Math.round(calculateRecencyScore(lastOpened, currentTime)),
       frequencyScore: openCount,
@@ -284,7 +337,7 @@ async function GenerateItemList(
           // const lastOpened = fileMeta ? fileMeta.lastOpened : 0;
           const openCount = fileMeta ? fileMeta.openCount : 0;
 
-          console.log(fs);
+          // console.log(fs);
 
           const recencyScoreMapped = mapNumberRange(
             minRecencyScore,
@@ -355,7 +408,7 @@ async function GenerateItemList(
             // label: fs.relativePath,
             // label: `${encodedScore} ${fs.relativePath}`,
             // label: `${encodedScore} ${path.basename(fs.filePath)}`,
-            label: path.basename(fs.filePath),
+            label: fs.label,
             // description: `${fs.relativePath} - ${finalScore.toFixed(2)}=(raw:${(
             //   fs.rawScore * scoreWeights.matchQuality
             // ).toFixed(2)})(rec:${(
@@ -456,13 +509,13 @@ async function GenerateItemList(
   return filteredItems;
 }
 
-export async function GetAllFilesInWorkspace(): Promise<string[]> {
+export async function GetAllFilesInWorkspace(): Promise<vscode.Uri[]> {
   if (!vscode.workspace.workspaceFolders) {
     vscode.window.showInformationMessage("No workspace is open.");
     return [];
   }
 
-  const allFiles: Set<string> = new Set();
+  const allFiles: vscode.Uri[] = [];
 
   for (const workspaceFolder of vscode.workspace.workspaceFolders) {
     const folderPath = workspaceFolder.uri.fsPath;
@@ -482,12 +535,12 @@ export async function GetAllFilesInWorkspace(): Promise<string[]> {
       const relativePath = path.relative(folderPath, file.fsPath);
       // Apply .gitignore filtering
       if (!ig.ignores(relativePath)) {
-        allFiles.add(file.fsPath);
+        allFiles.push(file);
       }
     });
   }
 
-  return Array.from(allFiles);
+  return allFiles;
 }
 
 // const charset = '<>:"/\\|?*'; // Valid characters for encoding

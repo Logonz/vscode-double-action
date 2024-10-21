@@ -3,20 +3,25 @@
 import * as vscode from "vscode";
 import { InitializeFind, SpawnQuickPick } from "./find";
 import { printChannelOutput } from "../extension";
-
+import { updateCustomLabelConfiguration } from "../helpers/customEditorLabelService";
 
 export function activateSmartOpen(context: vscode.ExtensionContext) {
-  printChannelOutput("Smart Open activating");
+  printChannelOutput("Smart Oopen activating");
   InitializeFind(context);
 
-  let quickOpen = vscode.commands.registerCommand(
-    "double-action.SmartOpen",
-    async () => {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("double-action.SmartOpen", async () => {
       await SpawnQuickPick();
-    }
+    }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration("workbench.editor.customLabels.enabled") ||
+        event.affectsConfiguration("workbench.editor.customLabels.patterns")
+      ) {
+        updateCustomLabelConfiguration();
+      }
+    })
   );
-
-  context.subscriptions.push(quickOpen);
 
   printChannelOutput("Smart Open activated", false);
 }

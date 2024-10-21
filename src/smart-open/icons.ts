@@ -44,18 +44,11 @@ export function LoadIcons() {
 
       // Example: Iterate through icon definitions
       if (iconJSON.iconDefinitions) {
-        Object.entries(iconJSON.iconDefinitions).forEach(
-          ([key, value]: any) => {
-            // console.log(`Icon: ${key}`, path.join(path.dirname(iconJSONPath), value.iconPath));
-            // console.log(`Icon: ${key}`, vscode.Uri.file(path.join(path.dirname(iconJSONPath), value.iconPath)));
-            iconDefinitions.set(
-              key,
-              vscode.Uri.file(
-                path.join(path.dirname(iconJSONPath), value.iconPath)
-              )
-            );
-          }
-        );
+        Object.entries(iconJSON.iconDefinitions).forEach(([key, value]: any) => {
+          // console.log(`Icon: ${key}`, path.join(path.dirname(iconJSONPath), value.iconPath));
+          // console.log(`Icon: ${key}`, vscode.Uri.file(path.join(path.dirname(iconJSONPath), value.iconPath)));
+          iconDefinitions.set(key, vscode.Uri.file(path.join(path.dirname(iconJSONPath), value.iconPath)));
+        });
       }
       if (iconJSON.fileExtensions) {
         Object.entries(iconJSON.fileExtensions).forEach(([key, value]: any) => {
@@ -103,31 +96,167 @@ export function LoadIcons() {
 }
 
 export async function GetIconForFile(file: vscode.Uri): Promise<vscode.Uri | undefined> {
-  const fileDoc = await vscode.workspace.openTextDocument(file)
-  console.log("DOC", fileDoc.fileName, fileDoc.languageId);
-        
-  let gIcon: vscode.Uri | undefined = undefined;
-  if (iconLanguageIds.has(fileDoc.languageId)) {
-    gIcon = iconLanguageIds.get(fileDoc.languageId);
+  // Get file extension
+  const fileExtension = path.extname(file.fsPath).toLowerCase();
+
+  // Exclude binary files
+  if (binaryFileExtensions.has(fileExtension)) {
+    console.log(`Binary file detected, skipping: ${file.fsPath}`);
+    return undefined;
   }
-  if (!gIcon && iconFileExtensions.has(path.extname(fileDoc.fileName))) {
-    gIcon = iconFileExtensions.get(path.extname(fileDoc.fileName));
-  }
-  if (!gIcon && iconFileNames.has(path.basename(fileDoc.fileName))) {
-    gIcon = iconFileNames.get(path.basename(fileDoc.fileName));
-  }
-  if (!gIcon && iconFolderNames.has(path.basename(fileDoc.fileName))) {
-    gIcon = iconFolderNames.get(path.basename(fileDoc.fileName));
-  }
-  if (!gIcon && iconDefinitions.has(fileDoc.languageId)) {
-    gIcon = iconDefinitions.get(fileDoc.languageId);
-  }
-  
-  if (gIcon) {
-    console.log(gIcon);
-    return gIcon;
-  } else {
-    printChannelOutput(`No icon found for ${fileDoc.fileName}`, false);
+
+  try {
+    const fileDoc = await vscode.workspace.openTextDocument(file);
+    // console.log("DOC", fileDoc.fileName, fileDoc.languageId);
+
+    let gIcon: vscode.Uri | undefined = undefined;
+    if (iconLanguageIds.has(fileDoc.languageId)) {
+      gIcon = iconLanguageIds.get(fileDoc.languageId);
+    }
+    if (!gIcon && iconFileExtensions.has(path.extname(fileDoc.fileName))) {
+      gIcon = iconFileExtensions.get(path.extname(fileDoc.fileName));
+    }
+    if (!gIcon && iconFileNames.has(path.basename(fileDoc.fileName))) {
+      gIcon = iconFileNames.get(path.basename(fileDoc.fileName));
+    }
+    if (!gIcon && iconFolderNames.has(path.basename(fileDoc.fileName))) {
+      gIcon = iconFolderNames.get(path.basename(fileDoc.fileName));
+    }
+    if (!gIcon && iconDefinitions.has(fileDoc.languageId)) {
+      gIcon = iconDefinitions.get(fileDoc.languageId);
+    }
+
+    if (gIcon) {
+      return gIcon;
+    } else {
+      console.log(`No icon found for ${fileDoc.fileName}`);
+      printChannelOutput(`No icon found for ${fileDoc.fileName}`, false);
+      return undefined;
+    }
+  } catch (error) {
+    console.error(`Error opening file: ${error}`);
     return undefined;
   }
 }
+
+// List of binary file extensions
+const binaryFileExtensions = new Set([
+  // Images
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".bmp",
+  ".tiff",
+  ".ico",
+  ".svg",
+  ".webp",
+  ".heic",
+  ".nef",
+  ".cr2",
+  ".arw",
+  // Executables and libraries
+  ".exe",
+  ".dll",
+  ".so",
+  ".app",
+  ".bin",
+  ".com",
+  ".msi",
+  ".out",
+  ".class",
+  ".deb",
+  ".rpm",
+  ".apk",
+  ".ipa",
+  ".xpi",
+  // Compiled code / Object files
+  ".o",
+  ".obj",
+  ".a",
+  ".lib",
+  ".pyc",
+  ".pyo",
+  ".jar",
+  ".war",
+  ".wasm",
+  ".swiftmodule",
+  // Archives
+  ".zip",
+  ".tar",
+  ".gz",
+  ".rar",
+  ".7z",
+  ".iso",
+  ".dmg",
+  ".cue",
+  ".bz2",
+  ".xz",
+  ".cab",
+  ".lzh",
+  ".arc",
+  ".cbr",
+  ".cbz",
+  // Media files
+  ".mp3",
+  ".wav",
+  ".aac",
+  ".flac",
+  ".ogg",
+  ".mp4",
+  ".mkv",
+  ".avi",
+  ".mov",
+  ".wmv",
+  ".webm",
+  ".raw",
+  ".flv",
+  ".f4v",
+  ".midi",
+  ".mid",
+  // Fonts
+  ".ttf",
+  ".otf",
+  ".woff",
+  ".eot",
+  // Miscellaneous
+  ".pdf",
+  ".swf",
+  ".psd",
+  ".ai",
+  ".dat",
+  ".db",
+  ".sqlite",
+  ".mdb",
+  ".bak",
+  ".pak",
+  ".vmdk",
+  ".qcow2",
+  ".dmp",
+  ".tlb",
+  ".pub",
+  // Documents
+  ".docx",
+  ".xlsx",
+  ".pptx",
+  ".doc",
+  ".xls",
+  ".ppt",
+  ".pub",
+  ".mobi",
+  ".epub",
+  ".odt",
+  ".ods",
+  ".odp",
+  // 3D Models
+  ".blend",
+  ".fbx",
+  ".stl",
+  ".3ds",
+  ".dwg",
+  ".dxf",
+  ".eps",
+  ".xcf",
+  ".indd",
+  ".psb",
+]);

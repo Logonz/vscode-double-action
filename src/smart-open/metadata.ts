@@ -3,29 +3,42 @@
 import * as vscode from "vscode";
 import { printChannelOutput } from "../extension";
 
-
 interface FileMetadata {
   lastOpened: number; // Timestamp in milliseconds
   openCount: number;
 }
 
-
-const METADATA_KEY = 'fileMetadata';
-const DECAY_RATE = 0.001;
+const METADATA_KEY = "fileMetadata";
 export const MAX_FREQUENCY_SCORE = 1000;
 
 export function getFileMetadata(context: vscode.ExtensionContext): Record<string, FileMetadata> {
   return context.globalState.get<Record<string, FileMetadata>>(METADATA_KEY, {});
 }
 
-export async function updateFileMetadata(context: vscode.ExtensionContext, filePath: string, time: number = Date.now()): Promise<void> {
+// export async function initializeMetadata(context: vscode.ExtensionContext, filePath: string): Promise<void> {
+//   const metadata = getFileMetadata(context);
+
+//   if (!metadata[filePath]) {
+//     metadata[filePath] = {
+//       lastOpened: 0,
+//       openCount: 0,
+//     };
+//     await context.globalState.update(METADATA_KEY, metadata);
+//   }
+// }
+
+export async function updateFileMetadata(
+  context: vscode.ExtensionContext,
+  filePath: string,
+  time: number = Date.now()
+): Promise<void> {
   const metadata = getFileMetadata(context);
   const currentTime = time;
 
   if (metadata[filePath]) {
     metadata[filePath].lastOpened = currentTime;
     // Only keep track of the last 1000 times the file was opened
-    metadata[filePath].openCount = Math.min(metadata[filePath].openCount + 1 , MAX_FREQUENCY_SCORE);
+    metadata[filePath].openCount = Math.min(metadata[filePath].openCount + 1, MAX_FREQUENCY_SCORE);
   } else {
     metadata[filePath] = {
       lastOpened: currentTime,
@@ -34,28 +47,6 @@ export async function updateFileMetadata(context: vscode.ExtensionContext, fileP
   }
 
   await context.globalState.update(METADATA_KEY, metadata);
-}
-export function calculateCompositeScore(
-  matchQuality: number, // e.g., from fuzzy search
-  recencyScore: number, // from exponential decay
-  frequencyScore: number, // e.g., normalized open count
-  closeScore: number, // e.g., from file closeness
-  weights: { matchQuality: number; recency: number; frequency: number; close: number} //
-): number {
-  return (
-    weights.matchQuality * matchQuality +
-    weights.recency * recencyScore +
-    weights.frequency * frequencyScore +
-    weights.close * closeScore
-  );
-}
-
-export function calculateRecencyScore(lastOpened: number, currentTime: number, decayRate: number = DECAY_RATE): number {
-  const timeDifference = currentTime - lastOpened; // in milliseconds
-  const daysDifference = timeDifference / (1000 * 60 * 60 * 24); // convert to days
-  const score = Math.exp(-decayRate * daysDifference);
-  // If score is NaN, return 0
-  return isNaN(score) ? 0 : score;
 }
 
 // Clean up file metadata that is older than 30 days + openCount / 50 days.
@@ -68,8 +59,11 @@ export function cleanUpFileMetadata(context: vscode.ExtensionContext): void {
     const timeDifference = currentTime - fileMetadata.lastOpened;
     const daysDifference = timeDifference / (1000 * 60 * 60 * 24); // convert to days
 
-    if (daysDifference > 30 + (metadata[filePath].openCount / 50)) { // With 1000 as a value it will add 20 days to the 30 days
-      printChannelOutput(`Removing metadata for ${filePath} because it is over ${30 + (metadata[filePath].openCount / 50)} days old.`);
+    if (daysDifference > 30 + metadata[filePath].openCount / 50) {
+      // With 1000 as a value it will add 20 days to the 30 days
+      printChannelOutput(
+        `Removing metadata for ${filePath} because it is over ${30 + metadata[filePath].openCount / 50} days old.`
+      );
       delete metadata[filePath];
     }
   }
