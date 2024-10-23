@@ -28,7 +28,7 @@ export function activateDotRepeat(context: vscode.ExtensionContext) {
     // Create the context
     const newContext = new ActionContext(contextId, timeoutSeconds, deactivateContext);
     activeContexts.set(contextId, newContext);
-    vscode.commands.executeCommand("setContext", globalContextId, true);
+    vscode.commands.executeCommand("setContext", globalContextId, false);
     return newContext;
   }
 
@@ -65,7 +65,7 @@ export function activateDotRepeat(context: vscode.ExtensionContext) {
       "double-action.repeatExecute",
       (input: RepeatInput) => {
         console.log("[double-action] RepeatExecute command executed", input);
-        printChannelOutput("RepeatExecute command executed", true);
+        printChannelOutput("RepeatExecute command executed", false);
         if (input) {
           if (!input.contextId) {
             vscode.window.showErrorMessage(
@@ -92,7 +92,7 @@ export function activateDotRepeat(context: vscode.ExtensionContext) {
         console.log("[double-action] RepeatExit command executed", input);
         if (input) {
           if (input.deactivateAll) {
-            printChannelOutput("Deactivating all contexts", true);
+            printChannelOutput("Deactivating all contexts", false);
             activeContexts.forEach((context) => {
               context.deactivate();
             });
@@ -112,7 +112,7 @@ export function activateDotRepeat(context: vscode.ExtensionContext) {
             if (context) {
               context.deactivate();
             } else {
-              printChannelOutput("Context not found", true);
+              printChannelOutput("Context not found", false);
             }
           }
         }

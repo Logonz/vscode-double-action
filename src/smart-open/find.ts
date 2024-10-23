@@ -189,7 +189,7 @@ async function GenerateItemList(
 ): Promise<FileQuickPickItem[]> {
   // Due to the bug that is sorting in quick pick, it basically only works either with 0 or 2 characters
   // TODO: When the bug is fixed and we can do our own sorting, we can remove this (https://github.com/microsoft/vscode/issues/73904)
-  if (needle.length == 1) {
+  if (needle.length === 1) {
     return [
       {
         label: "Use at least 2 characters to search files...",
@@ -223,7 +223,7 @@ async function GenerateItemList(
           fsPath: file.fsPath,
           relativePath: vscode.workspace.asRelativePath(file),
           customLabel: label ? label : vscode.workspace.asRelativePath(file),
-        }
+        };
         let addFile = true;
         for (let i = 0; i < needleParts.length; i++) {
           const part = needleParts[i];
@@ -343,21 +343,21 @@ async function GenerateItemList(
             minRecencyScore,
             maxRecencyScore,
             minScore,
-            maxScore == 0 ? 100 : maxScore, // If nothing is matched we still want score for recency
+            maxScore === 0 ? 100 : maxScore, // If nothing is matched we still want score for recency
             fs.recencyScore
           );
           const frequencyScoreMapped = mapNumberRange(
             0,
             MAX_FREQUENCY_SCORE,
             minScore,
-            maxScore == 0 ? MAX_FREQUENCY_SCORE : maxScore, // If nothing is matched we still want score for frequency
+            maxScore === 0 ? MAX_FREQUENCY_SCORE : maxScore, // If nothing is matched we still want score for frequency
             openCount
           );
           const closeScoreMapped = mapNumberRange(
             0,
             activeEditorPathParts.length,
             minScore,
-            maxScore == 0 ? 100 : maxScore, // If nothing is matched we still want score for closeness
+            maxScore === 0 ? 100 : maxScore, // If nothing is matched we still want score for closeness
             fs.closeScore
           );
           let finalScore = calculateCompositeScore(
